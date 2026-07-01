@@ -5,7 +5,6 @@ let myPass = null;
 let activePeer = null;
 let allMessages = [];
 let inspectorOpen = true;
-let sentMessages = [];
 
 const colors = [
   "#3b82f6",
@@ -111,13 +110,7 @@ function renderMessages() {
     (m) => m.sender === activePeer || m.recipient === activePeer,
   );
 
-  // also include sent messages (we only get received ones from API, so we track locally)
-  const all = [
-    ...convo,
-    ...sentMessages.filter(
-      (m) => m.recipient === activePeer || m.sender === activePeer,
-    ),
-  ].sort((a, b) => (a._ts || 0) - (b._ts || 0));
+const all = convo.sort((a, b) => a.timestamp - b.timestamp);
 
   if (all.length === 0) {
     box.innerHTML =
@@ -174,17 +167,7 @@ async function doSend() {
     });
     const d = await r.json();
     if (!r.ok) return alert(d.error || "Send failed");
-    const sentMsg = {
-      sender: me,
-      recipient: activePeer,
-      plaintext: msg,
-      sig_valid: true,
-      steps: d.steps,
-      _time: timeStr(),
-      _ts: Date.now(),
-      _isSent: true,
-    };
-    sentMessages.push(sentMsg);
+    
     await fetchMessages();
     // show inspector for the sent message
     showInspector(d.steps, msg, "sent");
