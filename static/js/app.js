@@ -309,10 +309,10 @@ function showInspector(steps, plaintext, dir, msg) {
     <div class="insp-section">
       <div class="insp-label">Protocol</div>
       <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">
-        <span class="tag tag-dh">X25519 ECDH</span>
-        <span class="tag tag-kdf">HKDF-SHA256</span>
+        <span class="tag tag-dh">DH RFC 3526</span>
+        <span class="tag tag-kdf">SHA-256 KDF</span>
         <span class="tag tag-enc">AES-256-GCM</span>
-        <span class="tag tag-sig">Ed25519</span>
+        <span class="tag tag-sig">RSA-PSS</span>
       </div>
     </div>
     <div class="insp-section">
