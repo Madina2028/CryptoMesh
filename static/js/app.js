@@ -215,13 +215,9 @@ function renderMessages() {
     (m) => m.sender === activePeer || m.recipient === activePeer,
   );
 
-  const all = [
-    ...convo,
-
-    ...sentMessages.filter(
-      (m) => m.recipient === activePeer || m.sender === activePeer,
-    ),
-  ].sort((a, b) => (a._ts || 0) - (b._ts || 0));
+  const all = [...convo].sort(
+    (a, b) => (a.timestamp || 0) - (b.timestamp || 0),
+  );
 
   if (all.length === 0) {
     box.innerHTML = `
@@ -272,11 +268,16 @@ function renderMessages() {
 
         <div class="bubble-meta">
 
-          <span class="bubble-time">
-
-            ${msg._time || "--:--"}
-
-          </span>
+        <span class="bubble-time">
+          ${
+            msg.timestamp
+              ? new Date(msg.timestamp).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })
+              : "--:--"
+          }
+        </span>
 
           ${sigBadge}
 
@@ -336,24 +337,10 @@ async function doSend() {
     const d = await r.json();
     if (!r.ok) return alert(d.error || "Send failed");
 
-    const sentMsg = {
-      sender: me,
-      recipient: activePeer,
-      plaintext: msg,
-      sig_valid: true,
-      steps: d.steps,
-      _time: timeStr(),
-      _ts: Date.now(),
-      _isSent: true,
-    };
-
-    sentMessages.push(sentMsg);
-
     // Refresh messages from the backend
     await fetchMessages();
 
     // Show Crypto Inspector
-    showInspector(d.steps, msg, "sent");
     showInspector(d.steps, msg, "sent");
   } catch (e) {
     alert("Backend unreachable");
@@ -394,7 +381,7 @@ async function pollMessages() {
 
         changed = true;
 
-        if (msg.sender !== activePeer) {
+        if (msg.sender !== me && msg.sender !== activePeer) {
           unreadCounts[msg.sender] = (unreadCounts[msg.sender] || 0) + 1;
 
           showBrowserNotification(msg.sender);
@@ -451,28 +438,28 @@ function inspectMessage(idx, dir) {
 }
 
 const stepClasses = {
-  ECDH: "dh",
-  "Key Exchange": "dh",
-  X25519: "dh",
-  HKDF: "kdf",
-  "Key Deriv": "kdf",
+  Unlock: "auth",
+
+  "Diffie-Hellman": "dh",
+  "Station-to-Station": "dh",
+
+  "Key Derivation": "kdf",
+  "SHA-256": "kdf",
+
   AES: "enc",
-  Encrypt: "enc",
-  Decrypt: "enc",
+  Encryption: "enc",
+  Decryption: "enc",
   GCM: "enc",
-  Ed25519: "sig",
-  Sign: "sig",
+
+  RSA: "sig",
+  "RSA-PSS": "sig",
   Signature: "sig",
   Verify: "sig",
-  Authenticate: "auth",
-  bcrypt: "auth",
-  scrypt: "auth",
-  KEK: "auth",
-  password: "auth",
-  Password: "auth",
+
   Saved: "save",
   disk: "save",
 };
+
 function stepClass(name) {
   for (const [k, v] of Object.entries(stepClasses))
     if (name.includes(k)) return v;
@@ -492,11 +479,11 @@ function showInspector(steps, plaintext, dir, msg) {
     <div class="insp-section">
       <div class="insp-label">Protocol</div>
   <div style="display:flex;flex-wrap:wrap;gap:4px;margin-bottom:8px">
-    <span class="tag tag-dh">X25519</span>
-    <span class="tag tag-kdf">HKDF-SHA256</span>
+    <span class="tag tag-dh">DH 2048-bit MODP</span>
+    <span class="tag tag-kdf">SHA-256 KDF</span>
     <span class="tag tag-enc">AES-256-GCM</span>
-    <span class="tag tag-sig">Ed25519</span>
-   </div>
+    <span class="tag tag-sig">RSA-PSS</span>
+  </div>
     </div>
     <div class="insp-section">
       <div class="insp-label">Operations (${(steps || []).length} steps)</div>
@@ -521,7 +508,7 @@ function showInspector(steps, plaintext, dir, msg) {
     html += `<div class="insp-section">
       <div class="insp-label">Integrity</div>
       <div class="algo-badge" style="border-color:${msg.sig_valid ? "var(--green)" : "var(--red)"}">
-        Ed25519 signature: ${msg.sig_valid ? "✓ VALID — sender authenticated" : "✗ INVALID — possible forgery"}
+        RSA-PSS signature: ${msg.sig_valid ? "✓ VALID — sender authenticated" : "✗ INVALID — possible forgery"}
       </div>
     </div>`;
   }
