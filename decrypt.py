@@ -124,25 +124,15 @@ def get_messages(data):
                 sig_valid = True
 
                 results.append({
-
                     "filename": f.name,
-                    
                     "timestamp": pkg.get("timestamp", 0),
-
                     "sender": sender,
-
                     "recipient": pkg.get("recipient"),
-
                     "algorithm": pkg.get("algorithm"),
-
                     "plaintext": plaintext,
-
                     "sig_valid": sig_valid,
-
                     "error": None,
-
                     "steps": steps
-
                 })
 
                 continue
@@ -363,24 +353,19 @@ def get_messages(data):
             })
 
         results.append({
-
             "filename": f.name,
-
+            "timestamp": pkg.get("timestamp", 0),
             "sender": pkg.get("sender"),
-
             "recipient": pkg.get("recipient"),
-
             "algorithm": pkg.get("algorithm"),
-
             "plaintext": plaintext,
-
             "sig_valid": sig_valid,
-
             "error": error,
-
             "steps": steps
+            })
 
-        })
+    # Sort messages chronologically (oldest → newest)
+    results.sort(key=lambda m: m.get("timestamp", 0))
 
     return {
 

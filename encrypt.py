@@ -177,7 +177,7 @@ def send_message(data):
 
     "msg_signature": b64e(msg_signature),
     
-    "timestamp": time.time(),
+    "timestamp": int(time.time() * 1000),
 
     "algorithm":
         "DH (2048-bit MODP) + STS + RSA-2048 + AES-256-GCM"
